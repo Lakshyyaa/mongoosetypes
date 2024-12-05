@@ -20,21 +20,27 @@ const POST = async (req: NextRequest) => {
 };
 
 // read
+import { User } from "@/models/userSchema";
+import { NextResponse } from "next/server";
+
 const GET = async () => {
   try {
-    await connect();
-    const obj = await User.find();
-    return NextResponse.json({ count: obj.length });
+    const obj = await User.find(); // Fetch all users from the database
+    return NextResponse.json({ count: obj.length }); // Return the count of users
   } catch (error) {
     console.error(error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    ); // Return 500 if error occurs
   }
 };
+
+export { GET };
 
 // update
 const PATCH = async (req: NextRequest) => {
   try {
-    await connect();
-
     const body = await req.json();
     const obj = await User.findOneAndUpdate(
       { rollno: body.rollno },
@@ -50,10 +56,7 @@ const PATCH = async (req: NextRequest) => {
 // delete
 const DELETE = async (req: NextRequest) => {
   try {
-    await connect();
-
     const body = await req.json();
-    console.log(body.rollno);
     const obj = await User.deleteOne({ rollno: body.rollno }).lean();
     return NextResponse.json({ deleted: obj });
   } catch (error) {

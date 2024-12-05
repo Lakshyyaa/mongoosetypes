@@ -1,7 +1,7 @@
-import { User } from "@/models/userSchema";
+import { User, UserInterface } from "@/models/userSchema";
 import { connect } from "../../../lib/dbConnect";
 import { NextRequest, NextResponse } from "next/server";
-let global = 0;
+
 // create
 const POST = async (req: NextRequest) => {
   try {
@@ -9,10 +9,9 @@ const POST = async (req: NextRequest) => {
     const body = await req.json();
     const user = await User.create({
       name: body.name,
-      rollno: global++,
+      rollno: body.rollno,
     });
-    const obj = user.toObject();
-    return NextResponse.json({ created: obj._id });
+    return NextResponse.json({ created: user._id });
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: e });
@@ -20,11 +19,11 @@ const POST = async (req: NextRequest) => {
 };
 
 // read
-const GET = async () => {
+const GET = async (req: NextRequest) => {
   try {
-    await connect();
-    const obj = await User.find();
-    return NextResponse.json({ count: obj.length });
+    const body = await req.json();
+    const obj:UserInterface = await User.findOne({ name: body.name })
+    return NextResponse.json({ rollno: obj?.rollno, courses: obj?.courses });
   } catch (error) {
     console.error(error);
   }
@@ -33,15 +32,8 @@ const GET = async () => {
 // update
 const PATCH = async (req: NextRequest) => {
   try {
-    await connect();
-
     const body = await req.json();
-    const obj = await User.findOneAndUpdate(
-      { rollno: body.rollno },
-      { name: body.name },
-      { new: true }
-    ).lean();
-    return NextResponse.json({ updated: obj?._id });
+    console.log(body);
   } catch (error) {
     console.error(error);
   }
@@ -50,12 +42,8 @@ const PATCH = async (req: NextRequest) => {
 // delete
 const DELETE = async (req: NextRequest) => {
   try {
-    await connect();
-
     const body = await req.json();
-    console.log(body.rollno);
-    const obj = await User.deleteOne({ rollno: body.rollno }).lean();
-    return NextResponse.json({ deleted: obj });
+    console.log(body);
   } catch (error) {
     console.error(error);
   }

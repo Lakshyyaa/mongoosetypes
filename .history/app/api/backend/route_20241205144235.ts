@@ -22,7 +22,6 @@ const POST = async (req: NextRequest) => {
 // read
 const GET = async () => {
   try {
-    await connect();
     const obj = await User.find();
     return NextResponse.json({ count: obj.length });
   } catch (error) {
@@ -33,27 +32,35 @@ const GET = async () => {
 // update
 const PATCH = async (req: NextRequest) => {
   try {
-    await connect();
-
     const body = await req.json();
+
+    // Find and update the user, and return the updated document as a plain object
     const obj = await User.findOneAndUpdate(
       { rollno: body.rollno },
       { name: body.name },
       { new: true }
-    ).lean();
-    return NextResponse.json({ updated: obj?._id });
+    ).lean(); // .lean() returns a plain JavaScript object
+
+    // Check if the result is an object and has _id
+    if (!obj) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Type assertion ensures TypeScript knows obj has _id
+    return NextResponse.json({ updated: (obj as { _id: any })._id });
   } catch (error) {
     console.error(error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 };
 
 // delete
 const DELETE = async (req: NextRequest) => {
   try {
-    await connect();
-
     const body = await req.json();
-    console.log(body.rollno);
     const obj = await User.deleteOne({ rollno: body.rollno }).lean();
     return NextResponse.json({ deleted: obj });
   } catch (error) {

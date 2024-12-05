@@ -22,7 +22,6 @@ const POST = async (req: NextRequest) => {
 // read
 const GET = async () => {
   try {
-    await connect();
     const obj = await User.find();
     return NextResponse.json({ count: obj.length });
   } catch (error) {
@@ -33,8 +32,6 @@ const GET = async () => {
 // update
 const PATCH = async (req: NextRequest) => {
   try {
-    await connect();
-
     const body = await req.json();
     const obj = await User.findOneAndUpdate(
       { rollno: body.rollno },
@@ -48,17 +45,34 @@ const PATCH = async (req: NextRequest) => {
 };
 
 // delete
+import { User } from "@/models/userSchema";
+import { NextRequest, NextResponse } from "next/server";
+
 const DELETE = async (req: NextRequest) => {
   try {
-    await connect();
-
     const body = await req.json();
-    console.log(body.rollno);
-    const obj = await User.deleteOne({ rollno: body.rollno }).lean();
-    return NextResponse.json({ deleted: obj });
+
+    // Perform the delete operation
+    const obj = await User.deleteOne({ rollno: body.rollno });
+
+    // Check if anything was deleted
+    if (obj.deletedCount === 0) {
+      // If nothing was deleted, return a 404 response
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Return a success response
+    return NextResponse.json({ message: "User deleted successfully" });
   } catch (error) {
     console.error(error);
+    // Return a 500 Internal Server Error response in case of an exception
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 };
+
+export { DELETE };
 
 export { POST, GET, PATCH, DELETE };

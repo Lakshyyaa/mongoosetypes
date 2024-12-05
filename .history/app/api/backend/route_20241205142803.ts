@@ -20,21 +20,40 @@ const POST = async (req: NextRequest) => {
 };
 
 // read
-const GET = async () => {
+import { User } from "@/models/userSchema";
+import { NextRequest, NextResponse } from "next/server";
+
+const GET = async (req: NextRequest) => {
   try {
-    await connect();
-    const obj = await User.find();
-    return NextResponse.json({ count: obj.length });
+    const body = await req.json();
+
+    // Query the user by rollno
+    const obj = await User.findOne({ rollno: body.rollno }).lean();
+
+    if (!obj) {
+      // If no user is found, return an error message
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Return the user data
+    return NextResponse.json({ rollno: obj.rollno, name: obj.name });
   } catch (error) {
     console.error(error);
+
+    // If an error occurs, return an error response
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 };
+
+export { GET };
+
 
 // update
 const PATCH = async (req: NextRequest) => {
   try {
-    await connect();
-
     const body = await req.json();
     const obj = await User.findOneAndUpdate(
       { rollno: body.rollno },
@@ -50,10 +69,7 @@ const PATCH = async (req: NextRequest) => {
 // delete
 const DELETE = async (req: NextRequest) => {
   try {
-    await connect();
-
     const body = await req.json();
-    console.log(body.rollno);
     const obj = await User.deleteOne({ rollno: body.rollno }).lean();
     return NextResponse.json({ deleted: obj });
   } catch (error) {

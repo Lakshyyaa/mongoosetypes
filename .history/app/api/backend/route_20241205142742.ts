@@ -20,11 +20,19 @@ const POST = async (req: NextRequest) => {
 };
 
 // read
-const GET = async () => {
+const GET = async (req: NextRequest) => {
   try {
-    await connect();
-    const obj = await User.find();
-    return NextResponse.json({ count: obj.length });
+    const body = await req.json();
+    const obj = await User.findOne({ rollno: body.rollno }).lean();
+        if (!obj) {
+          // If no user is found, return an error message
+          return NextResponse.json(
+            { error: "User not found" },
+            { status: 404 }
+          );
+        }
+
+    return NextResponse.json({ rollno: obj?.rollno, name: obj?.name });
   } catch (error) {
     console.error(error);
   }
@@ -33,8 +41,6 @@ const GET = async () => {
 // update
 const PATCH = async (req: NextRequest) => {
   try {
-    await connect();
-
     const body = await req.json();
     const obj = await User.findOneAndUpdate(
       { rollno: body.rollno },
@@ -50,10 +56,7 @@ const PATCH = async (req: NextRequest) => {
 // delete
 const DELETE = async (req: NextRequest) => {
   try {
-    await connect();
-
     const body = await req.json();
-    console.log(body.rollno);
     const obj = await User.deleteOne({ rollno: body.rollno }).lean();
     return NextResponse.json({ deleted: obj });
   } catch (error) {
