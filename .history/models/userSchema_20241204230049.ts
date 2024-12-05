@@ -1,0 +1,7 @@
+import mongoose from "mongoose";
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  rollno: { type: Number, required: true, unique: true },
+});
+export { userSchema };
+// export default mongoose.models.User || mongoose.model("User", UserSchema);
